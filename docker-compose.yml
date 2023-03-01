@@ -1,0 +1,42 @@
+version: "3"
+services:
+  db:
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: products_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      my-network:
+        ipv4_address: 172.50.0.3
+
+  backend:
+    image: backend
+    restart: always
+    depends_on:
+      - db
+    networks:
+      my-network:
+        ipv4_address: 172.50.0.2
+
+  frontend:
+    image: frontend
+    networks:
+      my-network:
+        ipv4_address: 172.50.0.4
+
+networks:
+  my-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.50.0.0/16
+volumes:
+  db_data:
