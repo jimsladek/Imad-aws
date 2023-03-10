@@ -6,7 +6,7 @@ pipeline {
             steps {
                 dir('BDD') {
                     script {
-                        docker.build("bdd", "-f Dockerfile")
+                        docker.build("bdd", "-f Dockerfile .")
                     }
                 }
             }
