@@ -1,42 +1,42 @@
 pipeline {
-    agent {
-      any { image 'python:3' }
-    }
-    environment {
-        FLASK_APP = "app.py"
-        FLASK_ENV = "development"
-    }
+    agent any
+
     stages {
-        stage('Checkout') {
+        stage('Build BDD Image') {
             steps {
-                checkout([$class: 'GitSCM', branches: [[name: 'main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/jimsladek/Imad-aws.git']]])
+                dir('BDD') {
+                    script {
+                        docker.build("bdd", "-f Dockerfile")
+                    }
+                }
             }
         }
-        stage('Build backend') {
+        stage('Build Backend Image') {
             steps {
-                sh 'cd backend-Python'
-                sh 'sudo docker build -t backend .'
+                dir('Backend') {
+                    script {
+                        docker.build("backend", "-f Dockerfile .")
+                    }
+                }
             }
         }
-        stage('Build frontend') {
+        stage('Build Frontend Image') {
             steps {
-                sh 'cd ../angular'
-                sh 'sudo docker build -t frontend .'
+                dir('Frontend') {
+                    script {
+                        docker.build("frontend", "-f Dockerfile .")
+                    }
+                }
             }
         }
-        stage('Run Container') {
+        stage('Git Checkout') {
             steps {
-                sh 'sudo docker-compose up -d --force-recreate'
+                git branch: 'master', url: 'https://github.com/jimsladek/Imad-aws.git'
             }
         }
-        stage('Merge to Dev') {
+        stage('Start Containers') {
             steps {
-                sh 'git checkout Dev && git merge origin/master'
-            }
-        }
-        stage('Deploy to Dev') {
-            steps {
-                sh 'echo "http://localhost:5000"'
+                sh 'docker-compose up -d'
             }
         }
     }
